@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorization Complete - Scheduled Social Media Posting System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .success-icon {
+            font-size: 4em;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✅</div>
+        <h1>Authorization Complete!</h1>
+        <p>Your TikTok app has been successfully authorized for the Scheduled Social Media Posting System.</p>
+        
+        <div class="info">
+            <h3>What happens next?</h3>
+            <p>This authorization enables your automated posting system to publish content to TikTok using the official Content Posting API.</p>
+        </div>
+        
+        <a href="index.html" class="btn">Return to Main Page</a>
+        
+        <div style="margin-top: 30px; font-size: 0.9em; color: #666;">
+            <p>This page confirms the OAuth callback for TikTok API integration.</p>
+            <p>Your automated posting system is now configured for TikTok.</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-redirect to main page after 10 seconds
+        setTimeout(function() {
+            window.location.href = 'index.html';
+        }, 10000);
+        
+        // Display any URL parameters (for debugging)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('code') || urlParams.has('error')) {
+            console.log('TikTok OAuth callback received:', Object.fromEntries(urlParams));
+        }
+    </script>
+</body>
+</html>

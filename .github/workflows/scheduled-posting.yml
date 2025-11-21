@@ -1,0 +1,80 @@
+name: Scheduled Social Media Posting
+
+on:
+  schedule:
+    # Monday-Friday at 9 AM UK time (UTC+0 in winter, UTC+1 in summer)
+    # Using UTC 9 AM for winter time - adjust if needed for summer time
+    - cron: '0 9 * * 1-5'
+    # Saturday-Sunday at 4 PM UK time
+    - cron: '0 16 * * 6,0'
+  workflow_dispatch:  # Allow manual triggering for testing
+
+jobs:
+  post-content:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+    
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Post to social media platforms
+      env:
+        # AWS Bedrock credentials for AI captions
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        
+        # S3 credentials for media access
+        AWS_ACCESS_KEY_ID_S3: ${{ secrets.AWS_ACCESS_KEY_ID_S3 }}
+        AWS_SECRET_ACCESS_KEY_S3: ${{ secrets.AWS_SECRET_ACCESS_KEY_S3 }}
+        
+        # Instagram Graph API
+        INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        INSTAGRAM_PAGE_ID: ${{ secrets.INSTAGRAM_PAGE_ID }}
+        
+        # TikTok Content Posting API
+        TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+        
+        # Tumblr API
+        TUMBLR_CONSUMER_KEY: ${{ secrets.TUMBLR_CONSUMER_KEY }}
+        TUMBLR_CONSUMER_SECRET: ${{ secrets.TUMBLR_CONSUMER_SECRET }}
+        TUMBLR_OAUTH_TOKEN: ${{ secrets.TUMBLR_OAUTH_TOKEN }}
+        TUMBLR_OAUTH_TOKEN_SECRET: ${{ secrets.TUMBLR_OAUTH_TOKEN_SECRET }}
+        TUMBLR_BLOG_NAME: ${{ secrets.TUMBLR_BLOG_NAME }}
+        
+        # Bluesky credentials
+        BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
+        BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+      run: |
+        python main.py post
+    
+    - name: Update queue status
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add content_queue.json media_links.json 2>/dev/null || true
+        if git diff --staged --quiet; then
+          echo "No queue changes to commit"
+        else
+          git commit -m "📤 Updated posting queue after scheduled post"
+          git push
+        fi
+    
+    - name: Show queue status
+      run: |
+        python main.py status

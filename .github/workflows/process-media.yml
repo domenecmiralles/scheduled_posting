@@ -1,0 +1,60 @@
+name: Process Media Files
+
+on:
+  push:
+    paths:
+      - 'media/**'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  process-media:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        persist-credentials: true
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+    
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Process media files
+      env:
+        # S3 credentials for media storage
+        AWS_ACCESS_KEY_ID_S3: ${{ secrets.AWS_ACCESS_KEY_ID_S3 }}
+        AWS_SECRET_ACCESS_KEY_S3: ${{ secrets.AWS_SECRET_ACCESS_KEY_S3 }}
+        # Bedrock credentials for AI captions (used by posting, not processing)
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        INSTAGRAM_PAGE_ID: ${{ secrets.INSTAGRAM_PAGE_ID }}
+        TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+      run: |
+        python media_processor.py
+    
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🤖 Processed media files and updated queue"
+          git push
+        fi
