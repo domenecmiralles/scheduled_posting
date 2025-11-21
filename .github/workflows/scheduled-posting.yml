@@ -2,11 +2,21 @@ name: Scheduled Social Media Posting
 
 on:
   schedule:
-    # Monday-Friday at 9 AM UK time (UTC+0 in winter, UTC+1 in summer)
-    # Using UTC 9 AM for winter time - adjust if needed for summer time
-    - cron: '0 8 * * 1-5'
-    # Saturday-Sunday at 4 PM UK time
-    - cron: '0 15 * * 6,0'
+    # Optimized posting times based on UK engagement data
+    # Monday 20:30 UK = 20:30 UTC (winter) / 19:30 UTC (summer)
+    - cron: '30 20 * * 1'
+    # Tuesday 17:30 UK = 17:30 UTC (winter) / 16:30 UTC (summer)  
+    - cron: '30 17 * * 2'
+    # Wednesday 21:00 UK = 21:00 UTC (winter) / 20:00 UTC (summer)
+    - cron: '0 21 * * 3'
+    # Thursday 20:30 UK = 20:30 UTC (winter) / 19:30 UTC (summer)
+    - cron: '30 20 * * 4'
+    # Friday 18:00 UK = 18:00 UTC (winter) / 17:00 UTC (summer)
+    - cron: '0 18 * * 5'
+    # Saturday 13:30 UK = 13:30 UTC (winter) / 12:30 UTC (summer)
+    - cron: '30 13 * * 6'
+    # Sunday 20:00 UK = 20:00 UTC (winter) / 19:00 UTC (summer)
+    - cron: '0 20 * * 0'
   workflow_dispatch:  # Allow manual triggering for testing
 
 jobs:
