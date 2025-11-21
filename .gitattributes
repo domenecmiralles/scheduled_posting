@@ -1,0 +1,13 @@
+# Git LFS tracking for video files in media folder
+media/*.mp4 filter=lfs diff=lfs merge=lfs -text
+media/*.mov filter=lfs diff=lfs merge=lfs -text
+media/*.avi filter=lfs diff=lfs merge=lfs -text
+media/*.webm filter=lfs diff=lfs merge=lfs -text
+media/*.mkv filter=lfs diff=lfs merge=lfs -text
+
+# Also track any video files that might be in temp folder during processing
+temp/*.mp4 filter=lfs diff=lfs merge=lfs -text
+temp/*.mov filter=lfs diff=lfs merge=lfs -text
+temp/*.avi filter=lfs diff=lfs merge=lfs -text
+temp/*.webm filter=lfs diff=lfs merge=lfs -text
+temp/*.mkv filter=lfs diff=lfs merge=lfs -text
