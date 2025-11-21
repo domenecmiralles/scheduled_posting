@@ -5,10 +5,43 @@ Clean, minimal entry point that coordinates all components
 
 import sys
 import os
+import requests
 from datetime import datetime
 from content_queue import get_next_post, mark_posted, get_status, cleanup_queue
 from caption_generator import generate_content_captions
 from platform_publishers import post_to_all_platforms
+
+
+def download_file_from_s3(s3_url, local_path):
+    """
+    Download file from S3 URL to local path for platforms that need local files
+    
+    Args:
+        s3_url (str): S3 URL of the file
+        local_path (str): Local path where to save the file
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        
+        # Download file from S3
+        print(f"📥 Downloading {os.path.basename(local_path)} from S3...")
+        response = requests.get(s3_url)
+        response.raise_for_status()
+        
+        # Save to local path
+        with open(local_path, 'wb') as f:
+            f.write(response.content)
+        
+        print(f"✅ Downloaded to {local_path}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to download file: {e}")
+        return False
 
 
 def main():
@@ -34,10 +67,17 @@ def main():
         print(f"❌ Caption generation failed: {e}")
         return
     
+    # Download file from S3 to local path for platforms that need local files
+    local_path = content.get('local_path')
+    if local_path and not os.path.exists(local_path):
+        if not download_file_from_s3(content['url'], local_path):
+            print("❌ Failed to download file for local platforms")
+            return
+    
     # Prepare content data for posting
     content_data = {
         'url': content['url'],
-        'local_path': content.get('local_path'),
+        'local_path': local_path,
         'media_type': content['media_type'],
         'filename': content['filename']
     }
