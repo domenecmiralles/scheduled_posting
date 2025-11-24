@@ -29,6 +29,28 @@ class CaptionGenerator:
         )
         self.model_id = 'amazon.nova-pro-v1:0'
     
+    def to_bold_unicode(self, text):
+        """
+        Convert text to Unicode bold characters for Instagram
+        
+        Args:
+            text (str): Text to convert to bold
+            
+        Returns:
+            str: Text with Unicode bold characters
+        """
+        bold_map = {
+            'A': '𝗔', 'B': '𝗕', 'C': '𝗖', 'D': '𝗗', 'E': '𝗘', 'F': '𝗙', 'G': '𝗚', 'H': '𝗛',
+            'I': '𝗜', 'J': '𝗝', 'K': '𝗞', 'L': '𝗟', 'M': '𝗠', 'N': '𝗡', 'O': '𝗢', 'P': '𝗣',
+            'Q': '𝗤', 'R': '𝗥', 'S': '𝗦', 'T': '𝗧', 'U': '𝗨', 'V': '𝗩', 'W': '𝗪', 'X': '𝗫',
+            'Y': '𝗬', 'Z': '𝗭', 'a': '𝗮', 'b': '𝗯', 'c': '𝗰', 'd': '𝗱', 'e': '𝗲', 'f': '𝗳',
+            'g': '𝗴', 'h': '𝗵', 'i': '𝗶', 'j': '𝗷', 'k': '𝗸', 'l': '𝗹', 'm': '𝗺', 'n': '𝗻',
+            'o': '𝗼', 'p': '𝗽', 'q': '𝗾', 'r': '𝗿', 's': '𝘀', 't': '𝘁', 'u': '𝘂', 'v': '𝘃',
+            'w': '𝘄', 'x': '𝘅', 'y': '𝘆', 'z': '𝘇', '0': '𝟬', '1': '𝟭', '2': '𝟮', '3': '𝟯',
+            '4': '𝟰', '5': '𝟱', '6': '𝟲', '7': '𝟳', '8': '𝟴', '9': '𝟵'
+        }
+        return ''.join(bold_map.get(char, char) for char in text)
+    
     def _shorten_video_for_llm(self, video_bytes, max_duration=10):
         """
         Create a shortened version of video for LLM analysis (max 10 seconds)
@@ -379,9 +401,11 @@ def generate_content_captions(media_url):
     fun_fact_followup = ai_result['fun_fact_followup']
     hashtags = ai_result['hashtags']
     
-    # Create Instagram caption with engagement hook
+    # Create Instagram caption with engagement hook (bold CTA)
     hashtags_text = ' '.join([f"#{tag}" for tag in hashtags]) if hashtags else ""
-    instagram_caption = f"{kaomoji}\n\n{fun_fact}\n\nComment FUN FACT to receive another didactic fun fact in your DMs!"
+    cta_text = "Comment FUN FACT to receive another didactic fun fact in your DMs!"
+    bold_cta = generator.to_bold_unicode(cta_text)
+    instagram_caption = f"{kaomoji}\n\n{fun_fact}\n\n{bold_cta}"
     if hashtags_text:
         instagram_caption += f"\n\n{hashtags_text}"
     
