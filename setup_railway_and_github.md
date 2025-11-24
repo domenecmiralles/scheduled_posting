@@ -1,10 +1,5 @@
 # 🚀 Complete Railway & GitHub Setup Guide
 
-## Your Railway Project Details (Extracted from URL)
-- **Project ID**: `f47884c7-d0f6-407a-96fc-07948bf9515b`
-- **Environment ID**: `4cefc02a-3ee6-47a1-a4f1-bd3bd3857d86`
-- **Service ID**: `5d84c9a8-90d6-4dab-a3a5-9d1bbc127638`
-
 ## Step 1: Set Railway Environment Variables
 
 ### Go to your Railway project:
@@ -12,42 +7,14 @@ https://railway.com/project/f47884c7-d0f6-407a-96fc-07948bf9515b/service/5d84c9a
 
 ### Add these 3 environment variables:
 
-```
-INSTAGRAM_ACCESS_TOKEN
-Value: EAAHrGvIG1mIBQPS6pDdIPf0wZB83jsCQ9lPZBOQtZCkvMr9ZAKncWH0dhL6BxoKvi359ReStvAXkz9BFEv7KzbQ7dBrCS5ZC37ZCt83p3DCi01akohdAfP1nScu3XyL2SxZCRmu94Vk1j6IMeK2wHdapPZBwETPU1ZA54ApCiw6ZBvNxlv8YswxDFpxrTfAj8hqiR0
 
-INSTAGRAM_PAGE_ID
-Value: 912765741916333
-
-WEBHOOK_VERIFY_TOKEN
-Value: instagram_webhook_secret_2024
-```
 
 ## Step 2: Add GitHub Secrets
 
 ### Go to your GitHub repository:
 https://github.com/domenecmiralles/scheduled_posting/settings/secrets/actions
 
-### Add these 6 secrets (click "New repository secret" for each):
 
-```
-INSTAGRAM_ACCESS_TOKEN
-Value: EAAHrGvIG1mIBQPS6pDdIPf0wZB83jsCQ9lPZBOQtZCkvMr9ZAKncWH0dhL6BxoKvi359ReStvAXkz9BFEv7KzbQ7dBrCS5ZC37ZCt83p3DCi01akohdAfP1nScu3XyL2SxZCRmu94Vk1j6IMeK2wHdapPZBwETPU1ZA54ApCiw6ZBvNxlv8YswxDFpxrTfAj8hqiR0
-
-FACEBOOK_CLIENT_ID
-Value: 539975938922082
-
-FACEBOOK_CLIENT_SECRET
-Value: 0146b058464a869b40d4607e4932f330
-
-RAILWAY_TOKEN
-Value: [your_railway_token_here]
-
-RAILWAY_PROJECT_ID
-Value: f47884c7-d0f6-407a-96fc-07948bf9515b
-
-RAILWAY_ENVIRONMENT_ID
-Value: 4cefc02a-3ee6-47a1-a4f1-bd3bd3857d86
 ```
 
 ## Step 3: Generate Your Railway Public Domain
