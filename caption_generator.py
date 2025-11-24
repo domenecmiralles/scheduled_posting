@@ -145,16 +145,18 @@ class CaptionGenerator:
             if not media_bytes:
                 return {'kaomoji': '', 'hashtags': []}
             
-            # Enhanced prompt for kaomoji, fun fact, and niche hashtags
+            # Enhanced prompt for kaomoji, two fun facts, and niche hashtags
             prompt = """Analyze this visual content as a learned connoisseur and return a JSON object with:
             1. A kaomoji (text ascii emoticon) that relates to an element in the content; make it creative and fitting, not generic.
-            2. A curious, not widely known fun fact about something related to what you see (aesthetic movement, technique, cultural reference, art history, etc.) - write as an expert sharing insider knowledge; write it in a concise and engaging way, not aknowledging the video nor talking about it nor of its object, but simply sharing a fact, with dates, names, and details. The more obscure the better. As curious and rare as possible.
-            3. Exactly 3 niche hashtags focused on specific aesthetic movements, art techniques, or visual culture concepts
+            2. A curious, not widely known fun fact about something related to what you see (aesthetic movement, technique, cultural reference, art history, etc.) - write as an expert sharing insider knowledge; write it in a concise and engaging way, not acknowledging the video nor talking about it nor of its object, but simply sharing a fact, with dates, names, and details. The more obscure the better.
+            3. A SECOND related but different fun fact on the same theme - this should complement the first fact but offer new information. Make it equally fascinating and obscure.
+            4. Exactly 3 niche hashtags focused on specific aesthetic movements, art techniques, or visual culture concepts
 
             Return ONLY a valid JSON object in this exact format:
             {
             "kaomoji": "your_kaomoji_here",
-            "fun_fact": "A fascinating, lesser-known fact about the visual elements, techniques, or cultural context you observe",
+            "fun_fact": "First fascinating, lesser-known fact about the visual elements, techniques, or cultural context you observe",
+            "fun_fact_followup": "Second related but different fascinating fact that complements the first",
             "hashtags": ["niche_aesthetic1", "specific_technique2", "cultural_movement3"]
             }
 
@@ -215,26 +217,27 @@ class CaptionGenerator:
                 result = json.loads(model_response.strip())
                 
                 # Validate structure
-                if 'kaomoji' in result and 'hashtags' in result and 'fun_fact' in result:
+                if 'kaomoji' in result and 'hashtags' in result and 'fun_fact' in result and 'fun_fact_followup' in result:
                     # Ensure hashtags is a list of exactly 3 items
                     hashtags = result['hashtags'][:3] if isinstance(result['hashtags'], list) else []
                     
                     return {
                         'kaomoji': str(result['kaomoji']),
                         'fun_fact': str(result['fun_fact']),
+                        'fun_fact_followup': str(result['fun_fact_followup']),
                         'hashtags': hashtags
                     }
                 else:
                     print("❌ Invalid JSON structure from AI")
-                    return {'kaomoji': '', 'fun_fact': '', 'hashtags': []}
+                    return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'hashtags': []}
                     
             except json.JSONDecodeError as e:
                 print(f"❌ Failed to parse AI response as JSON: {e}")
-                return {'kaomoji': '', 'fun_fact': '', 'hashtags': []}
+                return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'hashtags': []}
             
         except Exception as e:
             print(f"❌ Error generating content: {e}")
-            return {'kaomoji': '', 'fun_fact': '', 'hashtags': []}
+            return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'hashtags': []}
     
     def format_caption_for_platform(self, kaomoji, fun_fact, hashtags, platform):
         """
@@ -355,10 +358,11 @@ class CaptionGenerator:
         return facets
 
 
-# Main function for the posting script
+# Function for content queue generation (used during media upload)
 def generate_content_captions(media_url):
     """
     Generate captions for all platforms using simplified AI approach
+    Used only during media upload to pre-generate all caption data
     
     Args:
         media_url (str): URL of the media
@@ -368,17 +372,25 @@ def generate_content_captions(media_url):
     """
     generator = CaptionGenerator()
     
-    # Single AI call for kaomoji, fun fact, and hashtags
+    # Single AI call for kaomoji, both fun facts, and hashtags
     ai_result = generator.generate_caption_and_hashtags(media_url)
     kaomoji = ai_result['kaomoji']
     fun_fact = ai_result['fun_fact']
+    fun_fact_followup = ai_result['fun_fact_followup']
     hashtags = ai_result['hashtags']
+    
+    # Create Instagram caption with engagement hook
+    hashtags_text = ' '.join([f"#{tag}" for tag in hashtags]) if hashtags else ""
+    instagram_caption = f"{kaomoji}\n\n{fun_fact}\n\nComment FUN FACT to receive another didactic fun fact in your DMs!"
+    if hashtags_text:
+        instagram_caption += f"\n\n{hashtags_text}"
     
     # Same hashtags across all platforms
     return {
         'base_caption': kaomoji,
         'fun_fact': fun_fact,
-        'instagram': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'instagram'),
+        'fun_fact_followup': fun_fact_followup,
+        'instagram': instagram_caption,
         'tiktok': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'tiktok'),
         'tumblr': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'tumblr'),
         'bluesky': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'bluesky'),

@@ -56,7 +56,7 @@ class ContentQueue:
     
     def add_content(self, filename, s3_url, media_type, local_path=None):
         """
-        Add content to the posting queue
+        Add content to the posting queue with fun facts generation
         
         Args:
             filename (str): Original filename
@@ -67,6 +67,40 @@ class ContentQueue:
         Returns:
             dict: The content item added to queue
         """
+        # Generate complete caption data for the content
+        print(f"🤖 Generating complete caption data for {filename}...")
+        try:
+            from caption_generator import generate_content_captions
+            captions_data = generate_content_captions(s3_url)
+            
+            kaomoji = captions_data['base_caption']
+            fun_fact = captions_data['fun_fact']
+            fun_fact_followup = captions_data['fun_fact_followup']
+            hashtags = captions_data['hashtags']['instagram']  # Same hashtags for all platforms
+            platform_captions = {
+                'instagram': captions_data['instagram'],
+                'tiktok': captions_data['tiktok'],
+                'tumblr': captions_data['tumblr'],
+                'bluesky': captions_data['bluesky']
+            }
+            engagement_hook_used = True
+            
+            print(f"✅ Generated complete caption data for {filename}")
+            
+        except Exception as e:
+            print(f"⚠️ Failed to generate caption data for {filename}: {e}")
+            kaomoji = ""
+            fun_fact = ""
+            fun_fact_followup = ""
+            hashtags = []
+            platform_captions = {
+                'instagram': "",
+                'tiktok': "",
+                'tumblr': "",
+                'bluesky': ""
+            }
+            engagement_hook_used = False
+        
         content_item = {
             'id': len(self.queue) + 1,
             'filename': filename,
@@ -76,7 +110,13 @@ class ContentQueue:
             'added_date': datetime.now().isoformat(),
             'posted': False,
             'posted_date': None,
-            'posting_results': {}
+            'posting_results': {},
+            'kaomoji': kaomoji,
+            'fun_fact': fun_fact,
+            'fun_fact_followup': fun_fact_followup,
+            'hashtags': hashtags,
+            'platform_captions': platform_captions,
+            'engagement_hook_used': engagement_hook_used
         }
         
         self.queue.append(content_item)

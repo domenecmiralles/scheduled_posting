@@ -8,7 +8,6 @@ import os
 import requests
 from datetime import datetime
 from content_queue import get_next_post, mark_posted, get_status, cleanup_queue
-from caption_generator import generate_content_captions
 from platform_publishers import post_to_all_platforms
 
 
@@ -58,14 +57,32 @@ def main():
     
     print(f"🎯 Selected content: {content['filename']} (ID: {content['id']})")
     
-    # Generate captions for all platforms
-    print("🤖 Generating captions...")
-    try:
-        captions = generate_content_captions(content['url'])
-        print(f"✅ Generated caption: {captions['base_caption']}")
-    except Exception as e:
-        print(f"❌ Caption generation failed: {e}")
+    # Use pre-generated captions from queue
+    print("📝 Using pre-generated captions...")
+    
+    # Check if content has complete caption data
+    if 'platform_captions' not in content or not content['platform_captions']:
+        print("❌ Content missing pre-generated captions. Please run migration script.")
         return
+    
+    # Prepare captions data structure for platform publishers
+    captions = {
+        'base_caption': content.get('kaomoji', ''),
+        'fun_fact': content.get('fun_fact', ''),
+        'fun_fact_followup': content.get('fun_fact_followup', ''),
+        'instagram': content['platform_captions']['instagram'],
+        'tiktok': content['platform_captions']['tiktok'],
+        'tumblr': content['platform_captions']['tumblr'],
+        'bluesky': content['platform_captions']['bluesky'],
+        'hashtags': {
+            'instagram': content.get('hashtags', []),
+            'tiktok': content.get('hashtags', []),
+            'tumblr': content.get('hashtags', []),
+            'bluesky': content.get('hashtags', [])
+        }
+    }
+    
+    print(f"✅ Using pre-generated caption: {captions['base_caption']}")
     
     # Download file from S3 to local path for platforms that need local files
     local_path = content.get('local_path')

@@ -1,0 +1,132 @@
+name: Renew Facebook Access Token
+
+on:
+  schedule:
+    # Run every 50 days at 2 AM UTC (approximately - GitHub Actions doesn't support */50 days)
+    # This runs on the 1st and 15th of every month at 2 AM UTC (roughly every 2 weeks)
+    - cron: '0 2 1,15 * *'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  renew-token:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests python-dotenv
+    
+    - name: Renew Facebook token
+      env:
+        INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
+        FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
+      run: |
+        python renew_facebook_token.py
+    
+    - name: Read new token
+      id: get_token
+      run: |
+        # Extract new token from .env file
+        NEW_TOKEN=$(grep "INSTAGRAM_ACCESS_TOKEN=" .env | cut -d'=' -f2)
+        echo "new_token=$NEW_TOKEN" >> $GITHUB_OUTPUT
+        echo "Token extracted for updating secrets"
+    
+    - name: Update GitHub secret
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const newToken = '${{ steps.get_token.outputs.new_token }}';
+          
+          // Update the INSTAGRAM_ACCESS_TOKEN secret
+          await github.rest.actions.createOrUpdateRepoSecret({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            secret_name: 'INSTAGRAM_ACCESS_TOKEN',
+            encrypted_value: await github.rest.actions.getPublicKey({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            }).then(async (keyResponse) => {
+              const sodium = require('tweetsodium');
+              const key = keyResponse.data.key;
+              const keyBytes = Buffer.from(key, 'base64');
+              const messageBytes = Buffer.from(newToken);
+              const encryptedBytes = sodium.seal(messageBytes, keyBytes);
+              return Buffer.from(encryptedBytes).toString('base64');
+            })
+          });
+          
+          console.log('✅ GitHub secret updated successfully');
+    
+    - name: Update Railway environment variable
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
+      run: |
+        NEW_TOKEN="${{ steps.get_token.outputs.new_token }}"
+        
+        # Check if Railway secrets are configured
+        if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_PROJECT_ID" ] || [ -z "$RAILWAY_ENVIRONMENT_ID" ]; then
+          echo "⚠️ Railway secrets not configured - skipping Railway update"
+          echo "💡 To enable Railway updates, add RAILWAY_TOKEN, RAILWAY_PROJECT_ID, and RAILWAY_ENVIRONMENT_ID secrets"
+          exit 0
+        fi
+        
+        # Update Railway environment variable using Railway API
+        echo "🔄 Updating Railway environment variable..."
+        RESPONSE=$(curl -s -X POST \
+          -H "Authorization: Bearer $RAILWAY_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"query\": \"mutation variableUpsert(\$input: VariableUpsertInput!) { variableUpsert(input: \$input) }\",
+            \"variables\": {
+              \"input\": {
+                \"projectId\": \"$RAILWAY_PROJECT_ID\",
+                \"environmentId\": \"$RAILWAY_ENVIRONMENT_ID\",
+                \"name\": \"INSTAGRAM_ACCESS_TOKEN\",
+                \"value\": \"$NEW_TOKEN\"
+              }
+            }
+          }" \
+          "https://backboard.railway.app/graphql")
+        
+        # Check if the update was successful
+        if echo "$RESPONSE" | grep -q "error"; then
+          echo "❌ Railway update failed: $RESPONSE"
+          exit 1
+        else
+          echo "✅ Railway environment variable updated successfully"
+        fi
+    
+    - name: Commit token renewal log
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add token_renewals.log .env 2>/dev/null || true
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🔄 Renewed Facebook access token (automated)"
+          git push
+        fi
+    
+    - name: Notify renewal completion
+      run: |
+        echo "🎉 Facebook token renewal completed successfully!"
+        echo "📅 Next renewal scheduled in 50 days"
+        echo "📋 Token has been updated in:"
+        echo "   - .env file"
+        echo "   - GitHub secrets"
+        echo "   - Renewal logged to token_renewals.log"
