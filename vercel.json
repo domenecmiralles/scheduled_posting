@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/webhook.js": {
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "WEBHOOK_VERIFY_TOKEN": "instagram_webhook_secret_2024"
+  }
+}

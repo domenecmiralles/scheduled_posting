@@ -69,47 +69,6 @@ jobs:
           
           console.log('✅ GitHub secret updated successfully');
     
-    - name: Update Railway environment variable
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-        RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
-      run: |
-        NEW_TOKEN="${{ steps.get_token.outputs.new_token }}"
-        
-        # Check if Railway secrets are configured
-        if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_PROJECT_ID" ] || [ -z "$RAILWAY_ENVIRONMENT_ID" ]; then
-          echo "⚠️ Railway secrets not configured - skipping Railway update"
-          echo "💡 To enable Railway updates, add RAILWAY_TOKEN, RAILWAY_PROJECT_ID, and RAILWAY_ENVIRONMENT_ID secrets"
-          exit 0
-        fi
-        
-        # Update Railway environment variable using Railway API
-        echo "🔄 Updating Railway environment variable..."
-        RESPONSE=$(curl -s -X POST \
-          -H "Authorization: Bearer $RAILWAY_TOKEN" \
-          -H "Content-Type: application/json" \
-          -d "{
-            \"query\": \"mutation variableUpsert(\$input: VariableUpsertInput!) { variableUpsert(input: \$input) }\",
-            \"variables\": {
-              \"input\": {
-                \"projectId\": \"$RAILWAY_PROJECT_ID\",
-                \"environmentId\": \"$RAILWAY_ENVIRONMENT_ID\",
-                \"name\": \"INSTAGRAM_ACCESS_TOKEN\",
-                \"value\": \"$NEW_TOKEN\"
-              }
-            }
-          }" \
-          "https://backboard.railway.app/graphql")
-        
-        # Check if the update was successful
-        if echo "$RESPONSE" | grep -q "error"; then
-          echo "❌ Railway update failed: $RESPONSE"
-          exit 1
-        else
-          echo "✅ Railway environment variable updated successfully"
-        fi
-    
     - name: Commit token renewal log
       run: |
         git config --local user.email "action@github.com"
