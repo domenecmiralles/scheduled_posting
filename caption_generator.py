@@ -307,20 +307,20 @@ class CaptionGenerator:
             return main_content
             
         elif platform == 'bluesky':
-            # Bluesky: kaomoji + newline + fun_fact + double newline + hashtags (with facets)
+            # Bluesky: kaomoji + double newline + hashtags (with facets)
             # Bluesky has a 300 character limit, so we need to be more careful
-            if hashtags_text:
-                full_text = f"{main_content}\n\n{hashtags_text}" if main_content else hashtags_text
+            if kaomoji and hashtags_text:
+                full_text = f"{kaomoji}\n\n{hashtags_text}"
+            elif kaomoji:
+                full_text = kaomoji
+            elif hashtags_text:
+                full_text = hashtags_text
             else:
-                full_text = main_content
+                full_text = ""
             
-            # If too long, try just kaomoji + hashtags
+            # Check character limit
             if len(full_text) > 300:
-                if kaomoji and hashtags_text:
-                    fallback_text = f"{kaomoji}\n\n{hashtags_text}"
-                    if len(fallback_text) <= 300:
-                        return fallback_text
-                # If still too long, just kaomoji
+                # If too long, try just kaomoji
                 if kaomoji and len(kaomoji) <= 300:
                     return kaomoji
                 # Last resort: just hashtags
@@ -405,8 +405,6 @@ def generate_content_captions(media_url):
     hashtags_text = ' '.join([f"#{tag}" for tag in hashtags]) if hashtags else ""
     cta_text = "Comment FUN FACT to receive another didactic fun fact in your DMs!"
     bold_cta = generator.to_bold_unicode(cta_text)
-    #placeholder until API messaging facebook access is approved
-    bold_cta = ""
     instagram_caption = f"{kaomoji}\n\n{fun_fact}\n\n{bold_cta}"
     if hashtags_text:
         instagram_caption += f"\n\n{hashtags_text}"
