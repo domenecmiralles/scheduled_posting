@@ -4,19 +4,19 @@ on:
   schedule:
     # Optimized posting times based on UK engagement data
     # Monday 20:30 UK = 20:30 UTC (winter) / 19:30 UTC (summer)
-    - cron: '30 19 * * 1'
+    - cron: '30 20 * * 1'
     # Tuesday 17:30 UK = 17:30 UTC (winter) / 16:30 UTC (summer)  
-    - cron: '30 16 * * 2'
+    - cron: '30 17 * * 2'
     # Wednesday 21:00 UK = 21:00 UTC (winter) / 20:00 UTC (summer)
-    - cron: '0 20 * * 3'
+    - cron: '0 21 * * 3'
     # Thursday 20:30 UK = 20:30 UTC (winter) / 19:30 UTC (summer)
-    - cron: '30 19 * * 4'
+    - cron: '30 20 * * 4'
     # Friday 18:00 UK = 18:00 UTC (winter) / 17:00 UTC (summer)
-    - cron: '0 17 * * 5'
+    - cron: '0 18 * * 5'
     # Saturday 13:30 UK = 13:30 UTC (winter) / 12:30 UTC (summer)
-    - cron: '30 12 * * 6'
+    - cron: '30 13 * * 6'
     # Sunday 20:00 UK = 20:00 UTC (winter) / 19:00 UTC (summer)
-    - cron: '0 19 * * 0'
+    - cron: '0 20 * * 0'
   workflow_dispatch:  # Allow manual triggering for testing
 
 jobs:
