@@ -206,9 +206,20 @@
     "media_type": "video",
     "local_path": "temp/robot_skeleton_pony_processed.mp4",
     "added_date": "2025-11-22T23:27:47.049444",
-    "posted": false,
-    "posted_date": null,
-    "posting_results": {},
+    "posted": true,
+    "posted_date": "2025-11-26T20:04:11.855968",
+    "posting_results": {
+      "instagram": {
+        "id": "18104103442709778"
+      },
+      "tiktok": null,
+      "tumblr": null,
+      "bluesky": {
+        "uri": "at://did:plc:by7hbytluiqwk6bxnksxb5ld/app.bsky.feed.post/3m6knn6fdiu24",
+        "cid": "bafyreihkwxcf7maikjv4vppm4rhnssmrpkyrzlhrhv3nbrmbkhpfb52bc4",
+        "success": true
+      }
+    },
     "fun_fact": "In the early 20th century, sculptor Umberto Boccioni pioneered Futurist sculpture, which often featured dynamic and fragmented forms to convey movement and modernity. His work 'Unique Forms of Continuity in Space' (1913) exemplifies this by representing a human figure in motion, blending the boundaries between human and machine.",
     "fun_fact_followup": "The technique of creating sculptures using found objects, known as assemblage, gained prominence in the mid-20th century. Artists like Louise Nevelson used everyday items to construct complex, abstract forms, challenging traditional notions of sculpture and materiality.",
     "engagement_hook_used": true,
