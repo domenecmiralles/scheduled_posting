@@ -403,9 +403,14 @@ def generate_content_captions(media_url):
     
     # Create Instagram caption with engagement hook (bold CTA)
     hashtags_text = ' '.join([f"#{tag}" for tag in hashtags]) if hashtags else ""
-    cta_text = "Comment FUN FACT to receive another didactic fun fact in your DMs!"
-    bold_cta = generator.to_bold_unicode(cta_text)
-    instagram_caption = f"{kaomoji}\n\n{fun_fact}\n\n{bold_cta}"
+    
+    # TODO: Uncomment when Instagram messaging permissions are approved
+    # cta_text = "Comment FUN FACT to receive another didactic fun fact in your DMs!"
+    # bold_cta = generator.to_bold_unicode(cta_text)
+    # instagram_caption = f"{kaomoji}\n\n{fun_fact}\n\n{bold_cta}"
+    
+    # Temporary caption format without DM CTA (until messaging permissions approved)
+    instagram_caption = f"{kaomoji}\n\n{fun_fact}"
     if hashtags_text:
         instagram_caption += f"\n\n{hashtags_text}"
     
