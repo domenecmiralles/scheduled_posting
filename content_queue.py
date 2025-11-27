@@ -23,14 +23,58 @@ class ContentQueue:
         self.media_links = self._load_media_links()
     
     def _load_queue(self):
-        """Load queue from file or create empty queue"""
+        """Load queue from file or create empty queue with duplicate ID validation"""
         if os.path.exists(self.queue_file):
             try:
                 with open(self.queue_file, 'r') as f:
-                    return json.load(f)
+                    queue = json.load(f)
+                    
+                # Validate and fix duplicate IDs
+                queue = self._validate_and_fix_duplicate_ids(queue)
+                return queue
             except (json.JSONDecodeError, FileNotFoundError):
                 return []
         return []
+    
+    def _validate_and_fix_duplicate_ids(self, queue):
+        """
+        Validate queue for duplicate IDs and fix them
+        
+        Args:
+            queue (list): The loaded queue
+            
+        Returns:
+            list: Queue with fixed IDs
+        """
+        if not queue:
+            return queue
+            
+        seen_ids = set()
+        fixed_queue = []
+        max_id = max([item.get('id', 0) for item in queue], default=0)
+        needs_save = False
+        
+        for item in queue:
+            item_id = item.get('id')
+            
+            if item_id in seen_ids:
+                # Duplicate ID found - assign new unique ID
+                max_id += 1
+                old_id = item_id
+                item['id'] = max_id
+                print(f"⚠️ Fixed duplicate ID {old_id} -> {max_id} for {item.get('filename', 'unknown')}")
+                needs_save = True
+            
+            seen_ids.add(item['id'])
+            fixed_queue.append(item)
+        
+        # Save the fixed queue if changes were made
+        if needs_save:
+            print("💾 Saving queue with fixed duplicate IDs...")
+            with open(self.queue_file, 'w') as f:
+                json.dump(fixed_queue, f, indent=2)
+        
+        return fixed_queue
     
     def _save_queue(self):
         """Save queue to file"""
@@ -102,7 +146,7 @@ class ContentQueue:
             engagement_hook_used = False
         
         content_item = {
-            'id': len(self.queue) + 1,
+            'id': max([item['id'] for item in self.queue], default=0) + 1,
             'filename': filename,
             'url': s3_url,
             'media_type': media_type,
