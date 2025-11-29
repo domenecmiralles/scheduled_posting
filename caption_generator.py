@@ -188,13 +188,13 @@ class CaptionGenerator:
                - 2 BROAD hashtags (for reach: pick from aiart, surrealart, weirdcore, uncanny, kawaii, digitalart, creepy, darkart, surrealism, strangecore)
 
             Return ONLY a valid JSON object in this exact format:
-            {
+            {{
             "kaomoji": "your_kaomoji_here",
             "fun_fact": "In 1923, [obscure unknown person] discovered [surprising thing] in [specific place].",
             "fun_fact_followup": "The [material/technique] seen here originated from [completely different context] in [year].",
             "niche_hashtags": ["specificArtMovement", "nicheTechnique"],
             "broad_hashtags": ["surrealart", "weirdcore"]
-            }
+            }}
 
             FORBIDDEN: H.R. Giger, Dalí, Futurism, Surrealism movement basics, any Wikipedia-level facts
             REQUIRED: Names nobody has heard of, dates that surprise, places that are unexpected
