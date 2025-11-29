@@ -71,16 +71,16 @@ class ContentQueue:
         # Save the fixed queue if changes were made
         if needs_save:
             print("💾 Saving queue with fixed duplicate IDs...")
-            with open(self.queue_file, 'w') as f:
-                json.dump(fixed_queue, f, indent=2)
+            with open(self.queue_file, 'w', encoding='utf-8') as f:
+                json.dump(fixed_queue, f, indent=2, ensure_ascii=False)
         
         return fixed_queue
     
     def _save_queue(self):
-        """Save queue to file"""
+        """Save queue to file with readable Unicode characters"""
         os.makedirs(os.path.dirname(self.queue_file), exist_ok=True)
-        with open(self.queue_file, 'w') as f:
-            json.dump(self.queue, f, indent=2)
+        with open(self.queue_file, 'w', encoding='utf-8') as f:
+            json.dump(self.queue, f, indent=2, ensure_ascii=False)
     
     def _load_media_links(self):
         """Load media links tracking file"""
@@ -113,9 +113,19 @@ class ContentQueue:
         """
         # Generate complete caption data for the content
         print(f"🤖 Generating complete caption data for {filename}...")
+        
+        # Extract recent kaomojis to avoid repetition (last 10)
+        recent_kaomojis = [
+            item.get('kaomoji', '') 
+            for item in self.queue[-10:] 
+            if item.get('kaomoji')
+        ]
+        if recent_kaomojis:
+            print(f"🎭 Avoiding {len(recent_kaomojis)} recently used kaomojis")
+        
         try:
             from caption_generator import generate_content_captions
-            captions_data = generate_content_captions(s3_url)
+            captions_data = generate_content_captions(s3_url, recent_kaomojis=recent_kaomojis)
             
             kaomoji = captions_data['base_caption']
             fun_fact = captions_data['fun_fact']

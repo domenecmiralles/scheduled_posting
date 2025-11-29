@@ -151,12 +151,13 @@ class CaptionGenerator:
             print(f"Error downloading media: {e}")
             return None, None
     
-    def generate_caption_and_hashtags(self, media_url):
+    def generate_caption_and_hashtags(self, media_url, recent_kaomojis=None):
         """
         Generate both caption and hashtags in a single AI call
         
         Args:
             media_url (str): URL of the media to analyze
+            recent_kaomojis (list): List of recently used kaomojis to avoid
             
         Returns:
             dict: {'kaomoji': str, 'hashtags': [str, str, str]} or {'kaomoji': '', 'hashtags': []}
@@ -167,22 +168,37 @@ class CaptionGenerator:
             if not media_bytes:
                 return {'kaomoji': '', 'hashtags': []}
             
-            # Enhanced prompt for kaomoji, two fun facts, and niche hashtags
-            prompt = """Analyze this visual content as a learned connoisseur and return a JSON object with:
-            1. A kaomoji (text ascii emoticon) that relates to an element in the content; make it creative and fitting, not generic.
-            2. A curious, not widely known fun fact about something related to what you see (aesthetic movement, technique, cultural reference, art history, etc.) - write as an expert sharing insider knowledge; write it in a concise and engaging way, not acknowledging the video nor talking about it nor of its object, but simply sharing a fact, with dates, names, and details. The more obscure the better.
-            3. A SECOND related but different fun fact on the same theme - this should complement the first fact but offer new information. Make it equally fascinating and obscure.
-            4. Exactly 3 niche hashtags focused on specific aesthetic movements, art techniques, or visual culture concepts
+            # Build kaomoji avoidance instruction if recent ones provided
+            kaomoji_instruction = ""
+            if recent_kaomojis and len(recent_kaomojis) > 0:
+                avoid_list = ', '.join(recent_kaomojis)
+                kaomoji_instruction = f"\n            AVOID THESE RECENTLY USED KAOMOJIS: {avoid_list}\n            Pick a DIFFERENT kaomoji that hasn't been used recently."
+            
+            # Enhanced prompt for kaomoji, two punchy fun facts, and hybrid hashtags
+            prompt = f"""Analyze this visual content as an art history scholar and return a JSON object with:
+
+            1. A kaomoji (text ascii emoticon) that relates to an element in the content; make it creative and fitting, not generic.{kaomoji_instruction}
+            
+            2. ONE ULTRA-OBSCURE FUN FACT: A single surprising sentence about something thematically related to what you see. AVOID famous artists like H.R. Giger, Dalí, Warhol, Picasso, etc. Instead, find: forgotten practitioners, obscure regional art movements, specific technical innovations by unknown craftsmen, esoteric cultural practices, or niche art historical details that only specialists would know. Include specific names, dates, and places.
+            
+            3. DM FOLLOW-UP FACT: A COMPLETELY DIFFERENT angle on the same visual theme. If the first fact mentions a person, this one must be about a technique or material. If the first is about art history, this must be about cultural context or industrial history. MUST explore a totally different dimension - not just rephrasing the same topic.
+            
+            4. HASHTAGS - exactly 4 total:
+               - 2 NICHE hashtags (specific art movements, techniques, or visual culture concepts)
+               - 2 BROAD hashtags (for reach: pick from aiart, surrealart, weirdcore, uncanny, kawaii, digitalart, creepy, darkart, surrealism, strangecore)
 
             Return ONLY a valid JSON object in this exact format:
             {
             "kaomoji": "your_kaomoji_here",
-            "fun_fact": "First fascinating, lesser-known fact about the visual elements, techniques, or cultural context you observe",
-            "fun_fact_followup": "Second related but different fascinating fact that complements the first",
-            "hashtags": ["niche_aesthetic1", "specific_technique2", "cultural_movement3"]
+            "fun_fact": "In 1923, [obscure unknown person] discovered [surprising thing] in [specific place].",
+            "fun_fact_followup": "The [material/technique] seen here originated from [completely different context] in [year].",
+            "niche_hashtags": ["specificArtMovement", "nicheTechnique"],
+            "broad_hashtags": ["surrealart", "weirdcore"]
             }
 
-            Focus on obscure aesthetic movements, specific art techniques, visual culture theory, and niche artistic concepts. Make hashtags highly specific and cultured. Do not include # symbols in hashtags."""
+            FORBIDDEN: H.R. Giger, Dalí, Futurism, Surrealism movement basics, any Wikipedia-level facts
+            REQUIRED: Names nobody has heard of, dates that surprise, places that are unexpected
+            The two facts MUST be about completely different aspects of the visual theme."""
             
             # Create message content for Nova
             if media_type == 'video':
@@ -238,24 +254,30 @@ class CaptionGenerator:
             try:
                 result = json.loads(model_response.strip())
                 
-                # Validate structure
-                if 'kaomoji' in result and 'hashtags' in result and 'fun_fact' in result and 'fun_fact_followup' in result:
-                    # Ensure hashtags is a list of exactly 3 items
-                    hashtags = result['hashtags'][:3] if isinstance(result['hashtags'], list) else []
+                # Validate structure - new format with niche_hashtags and broad_hashtags
+                if 'kaomoji' in result and 'fun_fact' in result and 'fun_fact_followup' in result:
+                    # Get niche and broad hashtags (2 each)
+                    niche_hashtags = result.get('niche_hashtags', [])[:2] if isinstance(result.get('niche_hashtags'), list) else []
+                    broad_hashtags = result.get('broad_hashtags', [])[:2] if isinstance(result.get('broad_hashtags'), list) else []
+                    
+                    # Combine: niche first, then broad (total 4)
+                    combined_hashtags = niche_hashtags + broad_hashtags
                     
                     return {
                         'kaomoji': str(result['kaomoji']),
                         'fun_fact': str(result['fun_fact']),
                         'fun_fact_followup': str(result['fun_fact_followup']),
-                        'hashtags': hashtags
+                        'niche_hashtags': niche_hashtags,
+                        'broad_hashtags': broad_hashtags,
+                        'hashtags': combined_hashtags
                     }
                 else:
                     print("❌ Invalid JSON structure from AI")
-                    return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'hashtags': []}
+                    return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'niche_hashtags': [], 'broad_hashtags': [], 'hashtags': []}
                     
             except json.JSONDecodeError as e:
                 print(f"❌ Failed to parse AI response as JSON: {e}")
-                return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'hashtags': []}
+                return {'kaomoji': '', 'fun_fact': '', 'fun_fact_followup': '', 'niche_hashtags': [], 'broad_hashtags': [], 'hashtags': []}
             
         except Exception as e:
             print(f"❌ Error generating content: {e}")
@@ -381,13 +403,14 @@ class CaptionGenerator:
 
 
 # Function for content queue generation (used during media upload)
-def generate_content_captions(media_url):
+def generate_content_captions(media_url, recent_kaomojis=None):
     """
     Generate captions for all platforms using simplified AI approach
     Used only during media upload to pre-generate all caption data
     
     Args:
         media_url (str): URL of the media
+        recent_kaomojis (list): List of recently used kaomojis to avoid (optional)
         
     Returns:
         dict: Captions formatted for each platform
@@ -395,7 +418,8 @@ def generate_content_captions(media_url):
     generator = CaptionGenerator()
     
     # Single AI call for kaomoji, both fun facts, and hashtags
-    ai_result = generator.generate_caption_and_hashtags(media_url)
+    # Pass recent kaomojis to avoid repetition
+    ai_result = generator.generate_caption_and_hashtags(media_url, recent_kaomojis=recent_kaomojis)
     kaomoji = ai_result['kaomoji']
     fun_fact = ai_result['fun_fact']
     fun_fact_followup = ai_result['fun_fact_followup']
