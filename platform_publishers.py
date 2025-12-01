@@ -74,13 +74,15 @@ class InstagramPublisher:
                     'media_type': 'REELS',
                     'video_url': media_url,
                     'caption': caption,
-                    'access_token': self.access_token
+                    'access_token': self.access_token,
+                    'is_made_with_ai': 'true'
                 }
             else:  # image
                 container_params = {
                     'image_url': media_url,
                     'caption': caption,
-                    'access_token': self.access_token
+                    'access_token': self.access_token,
+                    'is_made_with_ai': 'true'
                 }
             
             container_response = requests.post(container_url, data=container_params)
@@ -436,14 +438,16 @@ class ThreadsPublisher:
                     'media_type': 'VIDEO',
                     'video_url': media_url,
                     'text': caption,
-                    'access_token': self.access_token
+                    'access_token': self.access_token,
+                    'is_made_with_ai': 'true'
                 }
             else:  # image
                 container_params = {
                     'media_type': 'IMAGE',
                     'image_url': media_url,
                     'text': caption,
-                    'access_token': self.access_token
+                    'access_token': self.access_token,
+                    'is_made_with_ai': 'true'
                 }
             
             print(f"🔄 Threads: Creating {media_type} container...")
