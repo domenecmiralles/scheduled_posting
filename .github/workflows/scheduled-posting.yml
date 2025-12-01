@@ -2,21 +2,21 @@ name: Scheduled Social Media Posting
 
 on:
   schedule:
-    # Optimized posting times based on UK engagement data
-    # Monday 20:30 UK = 20:30 UTC (winter) / 19:30 UTC (summer)
-    - cron: '30 20 * * 1'
-    # Tuesday 17:30 UK = 17:30 UTC (winter) / 16:30 UTC (summer)  
-    - cron: '30 17 * * 2'
-    # Wednesday 21:00 UK = 21:00 UTC (winter) / 20:00 UTC (summer)
-    - cron: '0 21 * * 3'
-    # Thursday 20:30 UK = 20:30 UTC (winter) / 19:30 UTC (summer)
-    - cron: '30 20 * * 4'
-    # Friday 18:00 UK = 18:00 UTC (winter) / 17:00 UTC (summer)
-    - cron: '0 18 * * 5'
-    # Saturday 13:30 UK = 13:30 UTC (winter) / 12:30 UTC (summer)
+    # Optimized for small account growth - late night posts with low competition
+    # Monday 22:00 UK - burned out Monday scrollers, low competition
+    - cron: '0 22 * * 1'
+    # Tuesday 19:30 UK - perfect "shoulder" hour, high engagement
+    - cron: '30 19 * * 2'
+    # Wednesday 22:15 UK - nighttime aesthetic content performs best
+    - cron: '15 22 * * 3'
+    # Thursday 21:45 UK - after dinner, before large creators' late-night pushes
+    - cron: '45 21 * * 4'
+    # Friday 15:45 UK - daytime art/design niche, lunch break scrollers
+    - cron: '45 15 * * 5'
+    # Saturday 13:30 UK - weekend lunch = gold for niche visual content
     - cron: '30 13 * * 6'
-    # Sunday 20:00 UK = 20:00 UTC (winter) / 19:00 UTC (summer)
-    - cron: '0 20 * * 0'
+    # Sunday 22:10 UK - late Sunday avoids 18:00-20:30 rush, strong push for small accounts
+    - cron: '10 22 * * 0'
   workflow_dispatch:  # Allow manual triggering for testing
 
 jobs:
@@ -72,6 +72,9 @@ jobs:
         # Bluesky credentials
         BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
         BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        
+        # Threads API
+        THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
       run: |
         python main.py post
     
