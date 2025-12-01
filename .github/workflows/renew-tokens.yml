@@ -1,0 +1,110 @@
+name: Renew Access Tokens
+
+on:
+  schedule:
+    # Run on the 1st and 15th of every month at 2 AM UTC
+    - cron: '0 2 1,15 * *'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  renew-tokens:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests python-dotenv
+    
+    - name: Renew tokens
+      env:
+        INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
+        FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
+        THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+        THREADS_APP_SECRET: ${{ secrets.THREADS_APP_SECRET }}
+      run: |
+        python renew_tokens.py
+    
+    - name: Read renewed tokens
+      id: tokens
+      run: |
+        if [ -f renewed_tokens.json ]; then
+          INSTAGRAM_TOKEN=$(jq -r '.INSTAGRAM_ACCESS_TOKEN // empty' renewed_tokens.json)
+          THREADS_TOKEN=$(jq -r '.THREADS_ACCESS_TOKEN // empty' renewed_tokens.json)
+          
+          if [ -n "$INSTAGRAM_TOKEN" ]; then
+            echo "instagram_token=$INSTAGRAM_TOKEN" >> $GITHUB_OUTPUT
+            echo "✅ Instagram token ready for update"
+          fi
+          
+          if [ -n "$THREADS_TOKEN" ]; then
+            echo "threads_token=$THREADS_TOKEN" >> $GITHUB_OUTPUT
+            echo "✅ Threads token ready for update"
+          fi
+        else
+          echo "❌ No renewed_tokens.json found"
+          exit 1
+        fi
+    
+    - name: Update Instagram secret
+      if: steps.tokens.outputs.instagram_token != ''
+      env:
+        GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+      run: |
+        echo "🔄 Updating INSTAGRAM_ACCESS_TOKEN secret..."
+        gh secret set INSTAGRAM_ACCESS_TOKEN --body "${{ steps.tokens.outputs.instagram_token }}"
+        echo "✅ INSTAGRAM_ACCESS_TOKEN updated"
+    
+    - name: Update Threads secret
+      if: steps.tokens.outputs.threads_token != ''
+      env:
+        GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+      run: |
+        echo "🔄 Updating THREADS_ACCESS_TOKEN secret..."
+        gh secret set THREADS_ACCESS_TOKEN --body "${{ steps.tokens.outputs.threads_token }}"
+        echo "✅ THREADS_ACCESS_TOKEN updated"
+    
+    - name: Cleanup sensitive files
+      run: |
+        rm -f renewed_tokens.json
+        echo "🧹 Cleaned up sensitive files"
+    
+    - name: Commit renewal log
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add token_renewals.log 2>/dev/null || true
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🔄 Token renewal log updated (automated)"
+          git push
+        fi
+    
+    - name: Summary
+      run: |
+        echo "🎉 Token renewal workflow completed!"
+        echo ""
+        echo "📋 Summary:"
+        if [ -n "${{ steps.tokens.outputs.instagram_token }}" ]; then
+          echo "   ✅ Instagram token renewed and secret updated"
+        else
+          echo "   ⚠️ Instagram token was not renewed"
+        fi
+        if [ -n "${{ steps.tokens.outputs.threads_token }}" ]; then
+          echo "   ✅ Threads token renewed and secret updated"
+        else
+          echo "   ⚠️ Threads token was not renewed"
+        fi
+        echo ""
+        echo "📅 Next renewal scheduled: 1st or 15th of next month"

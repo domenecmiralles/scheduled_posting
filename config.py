@@ -38,6 +38,10 @@ TUMBLR_BLOG_NAME = os.getenv('TUMBLR_BLOG_NAME')
 BLUESKY_USERNAME = os.getenv('BLUESKY_USERNAME')
 BLUESKY_PASSWORD = os.getenv('BLUESKY_PASSWORD')
 
+# Threads Configuration
+THREADS_ACCESS_TOKEN = os.getenv('THREADS_ACCESS_TOKEN')
+THREADS_APP_SECRET = os.getenv('THREADS_APP_SECRET')
+
 # Content Settings
 SUPPORTED_IMAGE_FORMATS = ['.png', '.jpg', '.jpeg', '.gif']
 SUPPORTED_VIDEO_FORMATS = ['.mp4', '.mov', '.avi']

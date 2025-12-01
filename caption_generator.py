@@ -352,6 +352,14 @@ class CaptionGenerator:
                 return ""
             
             return full_text
+        
+        elif platform == 'threads':
+            # Threads: kaomoji + fun_fact + hashtags (500 char limit)
+            # Similar to Instagram but with 500 char limit
+            if hashtags_text:
+                return f"{main_content}\n\n{hashtags_text}" if main_content else hashtags_text
+            else:
+                return main_content
             
         else:
             # Default: kaomoji + newline + fun_fact + space + hashtags
@@ -447,10 +455,12 @@ def generate_content_captions(media_url, recent_kaomojis=None):
         'tiktok': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'tiktok'),
         'tumblr': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'tumblr'),
         'bluesky': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'bluesky'),
+        'threads': generator.format_caption_for_platform(kaomoji, fun_fact, hashtags, 'threads'),
         'hashtags': {
             'instagram': hashtags,
             'tiktok': hashtags,
             'tumblr': hashtags,
-            'bluesky': hashtags
+            'bluesky': hashtags,
+            'threads': hashtags
         }
     }

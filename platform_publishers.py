@@ -14,7 +14,8 @@ from config import (
     TIKTOK_ACCESS_TOKEN,
     TUMBLR_CONSUMER_KEY, TUMBLR_CONSUMER_SECRET, 
     TUMBLR_OAUTH_TOKEN, TUMBLR_OAUTH_TOKEN_SECRET, TUMBLR_BLOG_NAME,
-    BLUESKY_USERNAME, BLUESKY_PASSWORD
+    BLUESKY_USERNAME, BLUESKY_PASSWORD,
+    THREADS_ACCESS_TOKEN
 )
 
 
@@ -378,6 +379,132 @@ class BlueskyPublisher:
             return None
 
 
+class ThreadsPublisher:
+    """Threads API publisher (Meta)"""
+    
+    def __init__(self):
+        self.access_token = THREADS_ACCESS_TOKEN
+        self.base_url = "https://graph.threads.net/v1.0"
+        self.user_id = None
+        self._get_user_id()
+    
+    def _get_user_id(self):
+        """Get the Threads user ID from the access token"""
+        if not self.access_token:
+            return
+        try:
+            url = f"{self.base_url}/me"
+            params = {
+                'access_token': self.access_token,
+                'fields': 'id,username'
+            }
+            response = requests.get(url, params=params)
+            data = response.json()
+            
+            if 'id' in data:
+                self.user_id = data['id']
+                print(f"✅ Threads: Connected as @{data.get('username', 'unknown')}")
+            else:
+                print(f"❌ Threads: Failed to get user ID - {data}")
+        except Exception as e:
+            print(f"❌ Threads: Error getting user ID - {e}")
+    
+    def post_content(self, content_data, caption):
+        """
+        Post content to Threads
+        
+        Args:
+            content_data (dict): Content information with 'url', 'media_type'
+            caption (str): Formatted caption with hashtags
+            
+        Returns:
+            dict: API response or None if failed
+        """
+        if not self.access_token or not self.user_id:
+            print("❌ Threads: API credentials not configured or user ID not found")
+            return None
+            
+        try:
+            media_type = content_data['media_type']
+            media_url = content_data['url']
+            
+            # Step 1: Create media container
+            container_url = f"{self.base_url}/{self.user_id}/threads"
+            
+            if media_type == 'video':
+                container_params = {
+                    'media_type': 'VIDEO',
+                    'video_url': media_url,
+                    'text': caption,
+                    'access_token': self.access_token
+                }
+            else:  # image
+                container_params = {
+                    'media_type': 'IMAGE',
+                    'image_url': media_url,
+                    'text': caption,
+                    'access_token': self.access_token
+                }
+            
+            print(f"🔄 Threads: Creating {media_type} container...")
+            container_response = requests.post(container_url, data=container_params)
+            container_data = container_response.json()
+            
+            if 'id' not in container_data:
+                print(f"❌ Threads: Container creation failed - {container_data}")
+                return None
+                
+            container_id = container_data['id']
+            print(f"✅ Threads: Container created (ID: {container_id})")
+            
+            # Step 2: Wait for processing (especially for videos)
+            status_url = f"{self.base_url}/{container_id}"
+            status_params = {
+                'fields': 'status',
+                'access_token': self.access_token
+            }
+            
+            for attempt in range(30):
+                status_response = requests.get(status_url, params=status_params)
+                status_data = status_response.json()
+                status = status_data.get('status')
+                
+                if status == 'FINISHED':
+                    print("✅ Threads: Media processing complete")
+                    break
+                elif status == 'ERROR':
+                    print(f"❌ Threads: Media processing failed - {status_data}")
+                    return None
+                elif status == 'IN_PROGRESS':
+                    print(f"🔄 Threads: Processing... (attempt {attempt + 1}/30)")
+                    time.sleep(2)
+                else:
+                    # For images, status might not be returned
+                    break
+            
+            # Step 3: Publish
+            publish_url = f"{self.base_url}/{self.user_id}/threads_publish"
+            publish_params = {
+                'creation_id': container_id,
+                'access_token': self.access_token
+            }
+            
+            print("🔄 Threads: Publishing...")
+            publish_response = requests.post(publish_url, data=publish_params)
+            publish_data = publish_response.json()
+            
+            if 'id' in publish_data:
+                print(f"✅ Threads: Posted {media_type} successfully (ID: {publish_data['id']})")
+                return publish_data
+            else:
+                print(f"❌ Threads: Publishing failed - {publish_data}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Threads: Error - {e}")
+            return None
+
+
 def post_to_all_platforms(content_data, captions_data):
     """
     Post content to all platforms simultaneously
@@ -428,6 +555,13 @@ def post_to_all_platforms(content_data, captions_data):
         content_data,
         captions_data['bluesky'],
         facets
+    )
+    
+    # Threads
+    threads = ThreadsPublisher()
+    results['threads'] = threads.post_content(
+        content_data,
+        captions_data.get('threads', captions_data['instagram'])  # Fallback to Instagram caption
     )
     
     return results
