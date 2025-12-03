@@ -127,38 +127,39 @@ jobs:
                 print(f'❌ Error getting fun fact for post {media_id}: {e}')
                 return None
         
-        def send_private_reply(comment_id, message):
-            '''Send a private reply to a comment using Private Replies API'''
+        def send_dm(instagram_account_id, user_id, message):
+            '''Send a direct message to a user via Instagram messaging API'''
             try:
-                url = f'{INSTAGRAM_API_BASE}/{comment_id}/private_replies'
+                url = f'{INSTAGRAM_API_BASE}/{instagram_account_id}/messages'
                 data = {
-                    'message': message,
+                    'recipient': {'id': user_id},
+                    'message': {'text': message},
                     'access_token': access_token
                 }
                 
-                response = requests.post(url, data=data)
+                response = requests.post(url, json=data)
                 result = response.json()
                 
                 if response.status_code == 200 and 'id' in result:
-                    print(f'✅ Private reply sent for comment {comment_id}')
+                    print(f'✅ DM sent to user {user_id}')
                     return True
                 else:
-                    print(f'❌ Failed to send private reply: {result}')
+                    print(f'❌ Failed to send DM: {result}')
                     return False
                     
             except Exception as e:
-                print(f'❌ Error sending private reply: {e}')
+                print(f'❌ Error sending DM: {e}')
                 return False
         
-        def log_interaction(comment_id, media_id, fun_fact):
-            '''Log private reply interaction for tracking'''
+        def log_interaction(user_id, media_id, fun_fact):
+            '''Log DM interaction for tracking'''
             try:
                 log_entry = {
                     'timestamp': datetime.now().isoformat(),
-                    'comment_id': comment_id,
+                    'user_id': user_id,
                     'media_id': media_id,
                     'fun_fact_sent': fun_fact[:100] + '...' if len(fun_fact) > 100 else fun_fact,
-                    'action': 'fun_fact_private_reply_sent'
+                    'action': 'fun_fact_dm_sent'
                 }
                 
                 # Simple logging to file
@@ -183,30 +184,30 @@ jobs:
         # Process comments for 'FUN FACT' trigger
         for comment in recent_comments:
             comment_text = comment.get('text', '').strip().upper()
-            comment_id = comment.get('id')
+            user_id = comment.get('from', {}).get('id')
             media_id = comment.get('media_id')
             
-            print(f'📝 Processing comment: \"{comment_text}\" (ID: {comment_id})')
+            print(f'📝 Processing comment: \"{comment_text}\" from user {user_id}')
             
             if comment_text == 'FUN FACT':
                 # Get the fun fact for this post
                 fun_fact = get_fun_fact_for_post(media_id)
                 
                 if fun_fact:
-                    # Send private reply with the fun fact
-                    reply_message = f'Here\\'s your didactic fun fact: {fun_fact}'
+                    # Send DM with the fun fact
+                    dm_message = f'Here\\'s your didactic fun fact: {fun_fact}'
                     
-                    if send_private_reply(comment_id, reply_message):
-                        print(f'✅ Sent fun fact private reply for comment {comment_id}')
-                        log_interaction(comment_id, media_id, fun_fact)
+                    if send_dm(instagram_account_id, user_id, dm_message):
+                        print(f'✅ Sent fun fact DM to user {user_id}')
+                        log_interaction(user_id, media_id, fun_fact)
                     else:
-                        print(f'❌ Failed to send private reply for comment {comment_id}')
+                        print(f'❌ Failed to send DM to user {user_id}')
                 else:
                     print(f'⚠️ No fun fact found for media {media_id}')
             else:
                 print(f'ℹ️ Comment doesn\\'t match trigger: \"{comment_text}\"')
         
-        print('🎉 Instagram private reply automation completed!')
+        print('🎉 Instagram DM automation completed!')
         "
     
     - name: Commit interaction logs
