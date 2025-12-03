@@ -25,7 +25,7 @@ class InstagramPublisher:
     def __init__(self):
         self.access_token = INSTAGRAM_ACCESS_TOKEN
         self.page_id = INSTAGRAM_PAGE_ID
-        self.base_url = "https://graph.facebook.com/v18.0"
+        self.base_url = "https://graph.facebook.com/v21.0"
         self.instagram_account_id = None
         self._get_instagram_account_id()
     

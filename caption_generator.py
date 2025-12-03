@@ -307,7 +307,9 @@ class CaptionGenerator:
             content_parts.append(fun_fact)
         
         main_content = '\n\n'.join(content_parts)
-        hashtags_text = ' '.join([f"#{tag}" for tag in hashtags]) if hashtags else ""
+        # Strip any existing # from hashtags before adding one (AI sometimes includes it)
+        clean_hashtags = [tag.lstrip('#') for tag in hashtags] if hashtags else []
+        hashtags_text = ' '.join([f"#{tag}" for tag in clean_hashtags]) if clean_hashtags else ""
         
         if platform == 'instagram':
             # Instagram: kaomoji + newline + fun_fact + double newline + hashtags
@@ -434,7 +436,9 @@ def generate_content_captions(media_url, recent_kaomojis=None):
     hashtags = ai_result['hashtags']
     
     # Create Instagram caption with engagement hook (bold CTA)
-    hashtags_text = ' '.join([f"#{tag}" for tag in hashtags]) if hashtags else ""
+    # Strip any existing # from hashtags (AI sometimes includes it)
+    clean_hashtags = [tag.lstrip('#') for tag in hashtags] if hashtags else []
+    hashtags_text = ' '.join([f"#{tag}" for tag in clean_hashtags]) if clean_hashtags else ""
     
     # TODO: Uncomment when Instagram messaging permissions are approved
     # cta_text = "Comment FUN FACT to receive another didactic fun fact in your DMs!"
