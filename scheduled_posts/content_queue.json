@@ -339,9 +339,19 @@
     "media_type": "video",
     "local_path": "temp/hello_kity_washing_machine_processed.mp4",
     "added_date": "2025-11-24T15:34:02.709608",
-    "posted": false,
-    "posted_date": null,
-    "posting_results": {},
+    "posted": true,
+    "posted_date": "2025-12-04T12:17:59.287284",
+    "posting_results": {
+      "instagram": {
+        "id": "18009406049650418"
+      },
+      "tiktok": null,
+      "tumblr": null,
+      "bluesky": null,
+      "threads": {
+        "id": "17923140423193542"
+      }
+    },
     "fun_fact": "The character depicted is Hello Kitty, a cultural icon created by Sanrio in 1974. Despite her widespread popularity, Hello Kitty does not have a mouth, a decision made by her creator, Yuko Shimizu, to encourage the projection of one's own feelings onto the character.",
     "fun_fact_followup": "Hello Kitty's full name is Kitty White, and she was born on November 1, 1974, in London. She is portrayed as a British girl who loves to play the piano and study, and she resides in the fictional London suburb of Marylebone.",
     "engagement_hook_used": true,
