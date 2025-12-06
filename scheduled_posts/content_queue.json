@@ -699,9 +699,23 @@
     "media_type": "video",
     "local_path": "temp/goats_with_goat_cups_processed.mp4",
     "added_date": "2025-12-04T16:21:14.788099",
-    "posted": false,
-    "posted_date": null,
-    "posting_results": {},
+    "posted": true,
+    "posted_date": "2025-12-06T15:07:55.079836",
+    "posting_results": {
+      "instagram": {
+        "id": "18083561675024693"
+      },
+      "tiktok": null,
+      "tumblr": null,
+      "bluesky": {
+        "uri": "at://did:plc:by7hbytluiqwk6bxnksxb5ld/app.bsky.feed.post/3m7dbpnk2kr2q",
+        "cid": "bafyreifwx3h6bqlrbpi2zmsnlz4f3xmksai526bvanulptek57f2aluu3i",
+        "success": true
+      },
+      "threads": {
+        "id": "18007652453661431"
+      }
+    },
     "kaomoji": "(⌒_⌒;)🐑",
     "fun_fact": "In 1932, the forgotten artist Theodora Woolworth created a series of porcelain sheep sculptures in her hidden studio in rural Minnesota.",
     "fun_fact_followup": "The porcelain used in these sculptures was sourced from a now-defunct factory in Staffordshire, England, known for its high-quality ceramic production in the early 20th century.",
